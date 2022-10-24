@@ -2,8 +2,14 @@ import React, {useState} from 'react'
 import {Link} from 'react-router-dom'
 import {AiFillEyeInvisible, AiFillEye} from 'react-icons/ai'
 import OAauth from '../components/OAauth'
+import {getAuth, createUserWithEmailAndPassword, updateProfile} from 'firebase/auth'
+import {db} from '../firebase'
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { useNavigate } from 'react-router-dom'
+import {toast} from 'react-toastify'
 
 export default function SignUp() {
+  const navigate = useNavigate()
   const [showPass, setShowPass] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -16,9 +22,26 @@ export default function SignUp() {
     setFormData({...formData, [name]: event.target.value})
   }
 
-  const handelSubmit = e => {
+  const handelSubmit = async (e) => {
     e.preventDefault()
-    console.log(formData)
+    try {
+      const auth = getAuth()
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      updateProfile(auth.currentUser, {
+        displayName: name,
+      });
+      const user = userCredential.user
+      const formDataCopy = {...formData}
+      delete formDataCopy.password
+      formDataCopy.timestamp = serverTimestamp()
+
+      await setDoc(doc(db, "users", user.uid), formDataCopy)
+      toast.success('registration was successful')
+      navigate('/')
+      
+    } catch (error) {
+      toast.error('Error in registration!!')
+    }
   }
   return (
     <section>
