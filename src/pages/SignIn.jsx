@@ -1,9 +1,13 @@
 import React, {useState} from 'react'
-import {Link} from 'react-router-dom'
+import {Link, useNavigate} from 'react-router-dom'
 import {AiFillEyeInvisible, AiFillEye} from 'react-icons/ai'
 import OAauth from '../components/OAauth'
+import { toast } from 'react-toastify'
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
+
 
 export default function SignIn() {
+  const navigate = useNavigate()
   const [showPass, setShowPass] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
@@ -15,9 +19,17 @@ export default function SignIn() {
     setFormData({...formData, [name]: event.target.value})
   }
 
-  const handelSubmit = e => {
+  const handelSubmit = async (e) => {
     e.preventDefault()
-    console.log(formData)
+    try {
+      const auth = getAuth()
+      const userCredentials = await signInWithEmailAndPassword(auth, email, password)
+      if(userCredentials){
+        navigate('/')
+      }
+    } catch (error) {
+      toast.error("Bad User Credentials!!")
+    }
   }
   return (
     <section>
